@@ -338,3 +338,4 @@ pytest tests/ -v --headless
 Проект подготовлен как учебный UI automation проект для Selenium и pytest.# autotests_automationexercise
 # autotests_automationexercise
 # autotests_automationexercise
+# autotests_automationexercise

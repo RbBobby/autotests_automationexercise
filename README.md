@@ -87,7 +87,7 @@ google-chrome --version
 ### 1. Клонировать репозиторий
 
 ```bash
-git clone <URL_ВАШЕГО_РЕПОЗИТОРИЯ>
+git clone https://github.com/RbBobby/autotests_automationexercise.git
 cd UI-tests
 ```
 
@@ -313,7 +313,7 @@ pytest tests/ -v --headless
 ## Команды для быстрого старта
 
 ```bash
-git clone <URL_ВАШЕГО_РЕПОЗИТОРИЯ>
+git clone https://github.com/RbBobby/autotests_automationexercise.git
 cd UI-tests
 python3 -m venv .venv
 source .venv/bin/activate
@@ -332,12 +332,3 @@ pytest tests/ -v --headless
 - добавить логирование шагов
 - добавить запуск в CI, например GitHub Actions
 - покрыть тестами страницу деталей товара и корзину
-
-## Автор
-
-Проект подготовлен как учебный UI automation проект для Selenium и pytest.# autotests_automationexercise
-# autotests_automationexercise
-# autotests_automationexercise
-# autotests_automationexercise
-# autotests_automationexercise
-# autotests_automationexercise

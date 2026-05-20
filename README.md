@@ -1,334 +1,237 @@
-# UI Tests for Automation Exercise Products Page
+# Automation Exercise — UI + API Tests
 
-Автотесты для страницы продуктов сайта https://automationexercise.com/products.
+Автотесты для [Automation Exercise](https://automationexercise.com): страница продуктов и REST API из [списка API](https://automationexercise.com/api_list).
 
-Проект реализован на `pytest + selenium` с использованием паттерна `Page Object Model`.
-Тесты покрывают базовые проверки страницы продуктов: загрузку страницы, поиск, карточки товаров, ссылки `View Product`, модальное окно корзины, категории и бренды в сайдбаре.
+| Набор | Технологии | Паттерн | Запуск |
+|-------|------------|---------|--------|
+| **API** (24 теста) | pytest, requests | API Client + Service Object, AAA | `pytest -m api` — браузер не нужен |
+| **UI** (~20 тестов) | pytest, selenium | Page Object Model | `pytest -m ui --headless` — нужен Chrome |
 
-## Стек проекта
+Тесты ходят на **живой** сайт `automationexercise.com` — нужен интернет.
 
-- Python 3.9+
-- pytest
-- selenium
-- pytest-html
-- Selenium Manager для автоматического поиска и запуска ChromeDriver
+---
+
+## Быстрый старт (первый запуск)
+
+Выполните команды из корня репозитория `autotests_automationexercise`:
+
+```bash
+# 1. Виртуальное окружение
+python3 -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\Activate.ps1
+
+# 2. Зависимости
+pip install --upgrade pip
+pip install -r requirements.txt
+
+# 3. API-тесты (рекомендуется начать с них — без Chrome)
+pytest -m api -v
+
+# 4. UI smoke (один тест)
+pytest tests/test_products_page.py::TestPageLoad::test_page_title -v --headless
+
+# 5. Все UI-тесты
+pytest -m ui -v --headless
+```
+
+Опционально — для **всех** API-тестов, включая логин (API 7–8):
+
+```bash
+cp .env.example .env
+# отредактируйте .env: TEST_USER_EMAIL и TEST_USER_PASSWORD — учётная запись,
+# зарегистрированная на https://automationexercise.com (Signup/Login)
+pytest -m api -v
+```
+
+Без `.env` пройдут 22 API-теста, 2 теста логина будут `skipped`.
+
+---
+
+## Стек
+
+- Python 3.9+ (проверено на 3.14)
+- pytest, pytest-html
+- **API:** requests, python-dotenv, faker
+- **UI:** selenium + Selenium Manager (chromedriver вручную не ставится)
+
+---
 
 ## Что проверяют тесты
 
-Набор тестов покрывает следующие сценарии:
+### API (14 сценариев с api_list)
 
-- доступность страницы `/products`
-- корректность URL и title страницы
-- наличие заголовка `All Products`
-- отображение строки поиска и кнопки поиска
-- наличие карточек товаров
-- наличие имени, цены и изображения у товаров
-- наличие ссылок `View Product`
-- работу поиска по товарам
-- открытие модального окна после `Add to cart`
-- закрытие модального окна
-- отображение блока категорий
-- отображение блока брендов
-- наличие ожидаемых брендов в сайдбаре
+- список товаров и брендов (GET)
+- неподдерживаемые методы (POST/PUT/DELETE → `responseCode` 405)
+- поиск товара и ошибка без параметра `search_product`
+- verify login: валидный / невалидный / без email / DELETE
+- жизненный цикл пользователя: create → update → get by email → delete
+
+### UI (страница `/products`)
+
+- загрузка страницы, URL, title, заголовок `All Products`
+- поиск, карточки товаров (имя, цена, изображение, `View Product`)
+- модальное окно корзины после `Add to cart`
+- сайдбар: категории, бренды (в т.ч. ожидаемый список)
 - переход на страницу деталей товара
+
+---
 
 ## Структура проекта
 
 ```text
-UI-tests/
-├── conftest.py
-├── requirements.txt
-├── README.md
+autotests_automationexercise/
+├── api/
+│   ├── client/api_client.py       # HTTP transport
+│   ├── config/settings.py         # .env → BASE_URL, credentials
+│   ├── models/user_factory.py
+│   └── services/                    # Products, Brands, Search, Auth, User
 ├── tests/
-│   ├── __init__.py
-│   └── test_products_page.py
-└── ui/
-	├── __init__.py
-	└── pages/
-		├── __init__.py
-		├── base_page.py
-		└── products_page.py
+│   ├── api/                       # @pytest.mark.api
+│   └── test_products_page.py      # @pytest.mark.ui
+├── ui/pages/                      # base_page, products_page
+├── conftest.py                    # UI: driver, --headless
+├── tests/api/conftest.py          # API: api_client, services, registered_user
+├── pytest.ini
+├── .env.example
+└── requirements.txt
 ```
+
+---
 
 ## Архитектура
 
-Проект использует `Page Object Model`:
+### API: Client → Service → Test (AAA)
 
-- `ui/pages/base_page.py` содержит базовые методы работы с Selenium WebDriver
-- `ui/pages/products_page.py` описывает локаторы и действия для страницы продуктов
-- `tests/test_products_page.py` содержит тестовые сценарии
-- `conftest.py` содержит фикстуры pytest и настройки браузера
+```text
+test  →  products_service.get_products()  →  ApiClient  →  automationexercise.com/api
+         ↑ fixture (DI)
+```
 
-## Системные требования
+- **Arrange** — fixtures (`registered_user`, `valid_user_payload`)
+- **Act** — один вызов метода Service
+- **Assert** — `response.json["responseCode"]`, `message`, структура JSON
 
-Перед запуском на машине должны быть установлены:
+> Сайт часто отвечает **HTTP 200** при ошибке; смотрите `responseCode` в теле JSON.
 
-- Python 3.9 или выше
-- Google Chrome актуальной версии
-- доступ в интернет для первого запуска Selenium Manager
+### UI: Page Object Model
 
-Проверить версии можно так:
+- `ui/pages/products_page.py` — локаторы и действия
+- `tests/test_products_page.py` — сценарии
+- `conftest.py` — `driver`, опция `--headless`
+
+---
+
+## Переменные окружения
+
+Скопируйте шаблон и при необходимости измените значения:
 
 ```bash
-python3 --version
-google-chrome --version
+cp .env.example .env
 ```
 
-Для macOS команда проверки Chrome может отличаться. Можно использовать:
+| Переменная | Назначение | По умолчанию |
+|------------|------------|--------------|
+| `API_BASE_URL` | Базовый URL API | `https://automationexercise.com/api` |
+| `API_TIMEOUT` | Таймаут запросов (сек) | `30` |
+| `TEST_USER_EMAIL` | Email для API 7–8 | — (тесты skip) |
+| `TEST_USER_PASSWORD` | Пароль для API 7–8 | — (тесты skip) |
 
-```bash
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --version
-```
-
-Если команда недоступна, достаточно убедиться, что браузер Google Chrome установлен через Applications.
-
-## Установка проекта с нуля
-
-### 1. Клонировать репозиторий
-
-```bash
-git clone https://github.com/RbBobby/autotests_automationexercise.git
-cd UI-tests
-```
-
-### 2. Создать виртуальное окружение
-
-```bash
-python3 -m venv .venv
-```
-
-### 3. Активировать виртуальное окружение
-
-macOS / Linux:
-
-```bash
-source .venv/bin/activate
-```
-
-Windows PowerShell:
-
-```powershell
-.venv\Scripts\Activate.ps1
-```
-
-Windows cmd:
-
-```cmd
-.venv\Scripts\activate.bat
-```
-
-### 4. Установить зависимости
-
-```bash
-pip install --upgrade pip
-pip install -r requirements.txt
-```
+---
 
 ## Запуск тестов
 
-### Запустить все тесты
+### API
 
 ```bash
-pytest tests/ -v
+pytest -m api -v
+pytest tests/api/test_products_list.py -v
 ```
 
-### Запустить все тесты в headless-режиме
+### UI
+
+```bash
+pytest -m ui -v --headless
+pytest tests/test_products_page.py::TestPageLoad::test_page_title -v --headless
+```
+
+### Всё сразу
 
 ```bash
 pytest tests/ -v --headless
 ```
 
-### Запустить один тестовый файл
-
-```bash
-pytest tests/test_products_page.py -v --headless
-```
-
-### Запустить один конкретный тест
-
-```bash
-pytest tests/test_products_page.py::TestPageLoad::test_page_title -v --headless
-```
-
-### Сформировать HTML-отчёт
+### HTML-отчёт
 
 ```bash
 pytest tests/ -v --headless --html=report.html --self-contained-html
 ```
 
-После выполнения будет создан файл `report.html`.
+---
 
-## Как работает запуск браузера
+## Системные требования
 
-Проект использует Selenium 4 со встроенным `Selenium Manager`.
+| Набор | Требования |
+|-------|------------|
+| API | Python 3.9+, интернет |
+| UI | + Google Chrome, интернет (первый раз — Selenium Manager скачает driver) |
 
-Это значит:
-
-- не нужно вручную скачивать `chromedriver`
-- не нужно хранить `chromedriver` в репозитории
-- при первом запуске Selenium сам подбирает подходящий драйвер под установленный Chrome
-
-Если на машине установлен Google Chrome, то в большинстве случаев дополнительная настройка не требуется.
-
-## Настройки браузера
-
-В `conftest.py` используются такие параметры Chrome:
-
-- `--headless=new` при передаче флага `--headless`
-- `--no-sandbox`
-- `--disable-dev-shm-usage`
-- размер окна `1920x1080`
-
-Также для драйвера включен `implicitly_wait(10)`.
-
-## Описание ключевых файлов
-
-### `conftest.py`
-
-Содержит:
-
-- pytest-опцию `--headless`
-- фикстуру `browser_options`
-- фикстуру `driver`
-
-### `ui/pages/base_page.py`
-
-Содержит базовые методы:
-
-- открытие страницы
-- ожидание элементов
-- клик по элементам
-- ввод текста
-- получение текста
-- проверки видимости и наличия элементов
-
-### `ui/pages/products_page.py`
-
-Содержит:
-
-- URL страницы продуктов
-- локаторы навигации
-- локаторы поиска
-- локаторы карточек товаров
-- локаторы блока категорий
-- локаторы блока брендов
-- методы поиска, открытия товара, работы с корзиной и сайдбаром
-
-### `tests/test_products_page.py`
-
-Содержит базовые UI тесты для страницы продуктов.
-
-## Рекомендованный порядок первого запуска
-
-Если вы поднимаете проект впервые, используйте такой порядок:
+Проверка:
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
-pytest tests/test_products_page.py::TestPageLoad::test_page_title -v --headless
-pytest tests/ -v --headless
+python3 --version
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --version   # macOS
 ```
 
-Сначала запускается один smoke-тест, затем весь набор.
+---
 
-## Типовые проблемы и решения
+## Установка с нуля (подробно)
 
-### 1. Браузер не запускается
-
-Проверьте, что установлен Google Chrome.
-
-Для macOS:
-
-- откройте Applications
-- убедитесь, что Google Chrome установлен
-
-### 2. Selenium не может подобрать драйвер
-
-Обычно это связано с:
-
-- отсутствием интернета при первом запуске
-- ограничениями прокси или корпоративной сети
-- нестандартной установкой браузера
-
-Что сделать:
-
-- проверить интернет
-- повторить запуск ещё раз
-- обновить Selenium до актуальной версии при необходимости
-
-### 3. Тесты падают нестабильно
-
-Причины могут быть такими:
-
-- сайт временно недоступен
-- сайт отвечает медленно
-- на странице изменились локаторы
-- браузер открылся не в headless-режиме и выполнение мешает внешнее окружение
-
-Что сделать:
-
-- повторить запуск
-- запустить в headless-режиме
-- проверить актуальность локаторов в `products_page.py`
-
-### 4. Ошибка SSL / предупреждение `NotOpenSSLWarning`
-
-На macOS с системным Python может появляться предупреждение от `urllib3` о `LibreSSL`.
-
-Это предупреждение не обязательно ломает тесты, но для более стабильной среды рекомендуется:
-
-- использовать Python из `pyenv`, `asdf` или официального дистрибутива Python
-- обновить локальную Python-среду при необходимости
-
-### 5. Долгий первый запуск
-
-Первый запуск может идти дольше обычного, потому что Selenium Manager подбирает и подготавливает драйвер.
-
-## Что важно для GitHub
-
-Тесты в этом репозитории обращаются к внешнему сайту `https://automationexercise.com`.
-Это значит, что результат прогона зависит не только от кода проекта, но и от:
-
-- доступности сайта
-- скорости ответа сайта
-- возможных изменений в DOM страницы
-- сетевых ограничений на стороне запускающей машины
-
-При публикации проекта в GitHub это важно указать, если вы будете подключать CI.
-
-## Что не коммитить в репозиторий
-
-При публикации проекта в GitHub рекомендуется не загружать в репозиторий:
-
-- `.venv/`
-- `.pytest_cache/`
-- `report.html`
-- `console_log.log`
-- `.DS_Store`
-
-Для этого обычно добавляют `.gitignore`.
-
-## Команды для быстрого старта
+### 1. Клонировать репозиторий
 
 ```bash
 git clone https://github.com/RbBobby/autotests_automationexercise.git
-cd UI-tests
-python3 -m venv .venv
-source .venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
-pytest tests/ -v --headless
+cd autotests_automationexercise
 ```
 
-## Дальнейшее развитие проекта
+### 2–4. venv и зависимости
 
-Проект можно расширить следующими направлениями:
+См. [Быстрый старт](#быстрый-старт-первый-запуск).
 
-- добавить фикстуры для разных браузеров
-- добавить поддержку `pytest.ini`
-- добавить скриншоты при падении тестов
-- добавить логирование шагов
-- добавить запуск в CI, например GitHub Actions
-- покрыть тестами страницу деталей товара и корзину
+### 5. `.env` (опционально)
+
+Нужен только если хотите запускать API 7–8 без `skipped`. Учётная запись должна быть создана на сайте через **Signup/Login**.
+
+---
+
+## Типовые проблемы
+
+### API: 2 теста skipped
+
+Не заданы `TEST_USER_EMAIL` / `TEST_USER_PASSWORD` в `.env`. Остальные API-тесты это не блокирует.
+
+### UI: браузер не стартует
+
+Установите Google Chrome. Первый запуск UI может быть долгим — Selenium Manager подбирает chromedriver.
+
+### Нестабильные падения
+
+Сайт недоступен, медленный ответ или изменился DOM/API. Повторите прогон; для UI используйте `--headless`.
+
+### `NotOpenSSLWarning` (macOS)
+
+Предупреждение urllib3 на системном Python. Для стабильности используйте Python из [python.org](https://www.python.org/) или pyenv.
+
+---
+
+## Что не коммитить
+
+`.venv/`, `.pytest_cache/`, `.env`, `report.html`, `*.log`, `.DS_Store` — уже в `.gitignore`.
+
+---
+
+## Дальнейшее развитие
+
+- CI: отдельные jobs `api` и `ui`
+- jsonschema для ответов API
+- smoke E2E: сравнение `productsList` (API) и UI-страницы
+- скриншоты при падении UI, другие браузеры

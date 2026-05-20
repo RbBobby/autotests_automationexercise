@@ -23,6 +23,8 @@ import pytest
 
 from ui.pages.products_page import ProductsPage
 
+pytestmark = pytest.mark.ui
+
 EXPECTED_BRANDS = ["POLO", "H&M", "MADAME", "MAST & HARBOUR", "BABYHUG", "BIBA"]
 
 

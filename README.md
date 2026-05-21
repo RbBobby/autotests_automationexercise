@@ -1,6 +1,10 @@
 # Automation Exercise — UI + API Tests
 
+![Tests](https://github.com/RbBobby/autotests_automationexercise/actions/workflows/tests.yml/badge.svg)
+
 Автотесты для [Automation Exercise](https://automationexercise.com): страница продуктов и REST API из [списка API](https://automationexercise.com/api_list).
+
+> Замените `RbBobby/autotests_automationexercise` в badge на ваш `логин/репозиторий`, если fork другой.
 
 | Набор | Технологии | Паттерн | Запуск |
 |-------|------------|---------|--------|
@@ -252,6 +256,16 @@ sudo mv /usr/local/bin/chromedriver /usr/local/bin/chromedriver.bak
 | `api-tests` | `pytest -m api` | нет |
 | `ui-tests` | `pytest -m ui --headless` | да (ставится автоматически) |
 
+### Badge в README
+
+В начале README уже есть статус workflow:
+
+```markdown
+![Tests](https://github.com/ВАШ_ЛОГИН/ВАШ_РЕПО/actions/workflows/tests.yml/badge.svg)
+```
+
+После push badge станет зелёным, если последний прогон CI успешен.
+
 ### Настройка один раз
 
 1. Закоммитьте и запушьте код на GitHub (ветка `main` или `master`).
@@ -263,10 +277,31 @@ sudo mv /usr/local/bin/chromedriver /usr/local/bin/chromedriver.bak
 
 Запуск вручную: **Actions → Tests → Run workflow**.
 
+### Артефакты CI (HTML-отчёты и скриншоты)
+
+После каждого прогона (даже при падении тестов) в **Actions → выберите run → Artifacts**:
+
+| Артефакт | Содержимое |
+|----------|------------|
+| `api-test-report` | `api-report.html` — отчёт pytest-html по API |
+| `ui-test-artifacts` | `ui-report.html` + папка `screenshots/` |
+
+Скачайте zip, откройте `ui-report.html` в браузере. При падении UI-теста в `screenshots/` будет PNG с экраном в момент ошибки.
+
+Локально те же отчёты:
+
+```bash
+mkdir -p reports/screenshots
+pytest -m api -v --html=reports/api-report.html --self-contained-html
+pytest -m ui -v --headless --html=reports/ui-report.html --self-contained-html
+```
+
+Папка `reports/` в `.gitignore` — в репозиторий не коммитится.
+
 ---
 
 ## Дальнейшее развитие
 
 - jsonschema для ответов API
 - smoke E2E: сравнение `productsList` (API) и UI-страницы
-- скриншоты при падении UI, другие браузеры
+- страницы product details / cart / login

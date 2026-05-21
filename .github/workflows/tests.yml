@@ -29,7 +29,19 @@ jobs:
           API_BASE_URL: https://automationexercise.com/api
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
-        run: pytest -m api -v --tb=short
+        run: |
+          mkdir -p reports
+          pytest -m api -v --tb=short \
+            --html=reports/api-report.html --self-contained-html
+
+      - name: Upload API HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-test-report
+          path: reports/api-report.html
+          retention-days: 14
+          if-no-files-found: ignore
 
   ui-tests:
     name: UI tests
@@ -50,4 +62,18 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run UI tests (headless)
-        run: pytest -m ui -v --headless --tb=short
+        run: |
+          mkdir -p reports/screenshots
+          pytest -m ui -v --headless --tb=short \
+            --html=reports/ui-report.html --self-contained-html
+
+      - name: Upload UI report and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-artifacts
+          path: |
+            reports/ui-report.html
+            reports/screenshots/
+          retention-days: 14
+          if-no-files-found: ignore

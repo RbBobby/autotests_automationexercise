@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import pytest
 
@@ -58,3 +59,29 @@ def driver(browser_options):
     chrome_driver.implicitly_wait(10)
     yield chrome_driver
     chrome_driver.quit()
+
+
+SCREENSHOTS_DIR = Path("reports/screenshots")
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """Save a browser screenshot when a UI test fails."""
+    outcome = yield
+    report = outcome.get_result()
+    if report.when != "call" or report.passed:
+        return
+
+    driver = item.funcargs.get("driver")
+    if driver is None:
+        return
+
+    SCREENSHOTS_DIR.mkdir(parents=True, exist_ok=True)
+    safe_name = item.nodeid.replace("/", "_").replace("::", "__")
+    screenshot_path = SCREENSHOTS_DIR / f"{safe_name}.png"
+    try:
+        driver.save_screenshot(str(screenshot_path))
+        report.extra = getattr(report, "extra", [])
+        report.extra.append(f"Screenshot: {screenshot_path}")
+    except Exception:
+        pass

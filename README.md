@@ -1,10 +1,8 @@
 # Automation Exercise — UI + API Tests
 
-![Tests](https://github.com/RbBobby/autotests_automationexercise/actions/workflows/tests.yml/badge.svg)
+![Tests](https://github.com/svetlanastepanina1-debug/autotests_automationexercise/actions/workflows/tests.yml/badge.svg)
 
 Автотесты для [Automation Exercise](https://automationexercise.com): страница продуктов и REST API из [списка API](https://automationexercise.com/api_list).
-
-> Замените `RbBobby/autotests_automationexercise` в badge на ваш `логин/репозиторий`, если fork другой.
 
 | Набор | Технологии | Паттерн | Запуск |
 |-------|------------|---------|--------|
@@ -193,7 +191,7 @@ python3 --version
 ### 1. Клонировать репозиторий
 
 ```bash
-git clone https://github.com/RbBobby/autotests_automationexercise.git
+git clone https://github.com/svetlanastepanina1-debug/autotests_automationexercise.git
 cd autotests_automationexercise
 ```
 
@@ -261,8 +259,10 @@ sudo mv /usr/local/bin/chromedriver /usr/local/bin/chromedriver.bak
 В начале README уже есть статус workflow:
 
 ```markdown
-![Tests](https://github.com/ВАШ_ЛОГИН/ВАШ_РЕПО/actions/workflows/tests.yml/badge.svg)
+![Tests](https://github.com/svetlanastepanina1-debug/autotests_automationexercise/actions/workflows/tests.yml/badge.svg)
 ```
+
+Формула: `https://github.com/<логин>/<репозиторий>/actions/workflows/<имя-workflow>.yml/badge.svg`
 
 После push badge станет зелёным, если последний прогон CI успешен.
 

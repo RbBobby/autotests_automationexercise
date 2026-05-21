@@ -111,9 +111,31 @@ class ProductsPage(BasePage):
         return len(self.find_elements(self.PRODUCT_CARDS))
 
     def click_view_product(self, index: int = 0):
-        """Click the 'View Product' link for the product at the given index (0-based)."""
-        links = self.find_elements(self.VIEW_PRODUCT_LINKS)
-        links[index].click()
+        """
+        Open product details for the card at index (0-based).
+
+        Uses JS click, then falls back to direct navigation if an ad overlay
+        (e.g. #google_vignette in CI) blocks the click.
+        """
+        links = self.wait.until(
+            EC.presence_of_all_elements_located(self.VIEW_PRODUCT_LINKS)
+        )
+        link = links[index]
+        href = link.get_attribute("href")
+        if not href or "product_details" not in href:
+            raise ValueError(f"View Product link has unexpected href: {href!r}")
+
+        self.driver.execute_script(
+            "arguments[0].scrollIntoView({block: 'center'});", link
+        )
+        self.driver.execute_script("arguments[0].click();", link)
+
+        try:
+            self.wait_for_url_contains("product_details", timeout=5)
+        except Exception:
+            if "product_details" not in self.driver.current_url:
+                self.open(href)
+                self.wait_for_url_contains("product_details")
 
     def hover_and_add_to_cart(self, index: int = 0):
         """

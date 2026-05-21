@@ -45,6 +45,9 @@ class BasePage:
     def get_current_url(self) -> str:
         return self.driver.current_url
 
+    def wait_for_url_contains(self, fragment: str, timeout: int = 10):
+        WebDriverWait(self.driver, timeout).until(lambda d: fragment in d.current_url)
+
     def wait_for_element_visible(self, locator: tuple):
         return self.wait.until(EC.visibility_of_element_located(locator))
 

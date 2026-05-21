@@ -1,6 +1,17 @@
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+import time
+
+from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+
+_TRANSIENT_NAV_ERRORS = (
+    "err_connection",
+    "err_internet",
+    "err_name_not_resolved",
+    "timeout",
+    "unknown error",
+)
 
 
 class BasePage:
@@ -10,8 +21,23 @@ class BasePage:
         self.driver = driver
         self.wait = WebDriverWait(driver, 10)
 
-    def open(self, url: str):
-        self.driver.get(url)
+    def open(self, url: str, retries: int = 3):
+        """Navigate to URL; retry on transient network errors (live site flakiness)."""
+        last_error = None
+        for attempt in range(retries):
+            try:
+                self.driver.get(url)
+                return
+            except WebDriverException as exc:
+                last_error = exc
+                message = str(exc).lower()
+                is_transient = any(token in message for token in _TRANSIENT_NAV_ERRORS)
+                if attempt < retries - 1 and is_transient:
+                    time.sleep(2 * (attempt + 1))
+                    continue
+                raise
+        if last_error:
+            raise last_error
 
     def get_title(self) -> str:
         return self.driver.title

@@ -209,6 +209,20 @@ cd autotests_automationexercise
 
 Не заданы `TEST_USER_EMAIL` / `TEST_USER_PASSWORD` в `.env`. Остальные API-тесты это не блокирует.
 
+### UI: `SessionNotCreatedException` — ChromeDriver vs Chrome
+
+Сообщение вида *«ChromeDriver only supports Chrome version 146», Current browser version is 148* значит, что в `PATH` лежит **устаревший** `chromedriver` (часто `/usr/local/bin/chromedriver`).
+
+**Решение 1 (в проекте уже учтено):** `conftest.py` временно убирает такой driver из `PATH` и использует Selenium Manager.
+
+**Решение 2 (на машине):** удалить или переименовать старый драйвер:
+
+```bash
+sudo mv /usr/local/bin/chromedriver /usr/local/bin/chromedriver.bak
+```
+
+Затем снова: `pytest -m ui -v --headless`
+
 ### UI: браузер не стартует
 
 Установите Google Chrome. Первый запуск UI может быть долгим — Selenium Manager подбирает chromedriver.
@@ -229,9 +243,30 @@ cd autotests_automationexercise
 
 ---
 
+## CI (GitHub Actions)
+
+В репозитории есть workflow [`.github/workflows/tests.yml`](.github/workflows/tests.yml) с двумя job:
+
+| Job | Команда | Нужен Chrome |
+|-----|---------|--------------|
+| `api-tests` | `pytest -m api` | нет |
+| `ui-tests` | `pytest -m ui --headless` | да (ставится автоматически) |
+
+### Настройка один раз
+
+1. Закоммитьте и запушьте код на GitHub (ветка `main` или `master`).
+2. На GitHub: **Settings → Secrets and variables → Actions → New repository secret**:
+   - `TEST_USER_EMAIL` — email с automationexercise.com
+   - `TEST_USER_PASSWORD` — пароль
+3. Без secrets API 7–8 в CI будут `skipped` (как локально без `.env`).
+4. Проверка: вкладка **Actions** → workflow **Tests** → зелёные `api-tests` и `ui-tests`.
+
+Запуск вручную: **Actions → Tests → Run workflow**.
+
+---
+
 ## Дальнейшее развитие
 
-- CI: отдельные jobs `api` и `ui`
 - jsonschema для ответов API
 - smoke E2E: сравнение `productsList` (API) и UI-страницы
 - скриншоты при падении UI, другие браузеры

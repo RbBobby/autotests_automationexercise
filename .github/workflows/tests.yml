@@ -8,7 +8,28 @@ on:
   workflow_dispatch:
 
 jobs:
+  lint:
+    name: Lint (Ruff)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Ruff
+        run: pip install ruff==0.8.4
+
+      - name: Ruff check
+        run: ruff check .
+
+      - name: Ruff format check
+        run: ruff format --check .
+
   api-tests:
+    needs: lint
     name: API tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -44,6 +65,7 @@ jobs:
           if-no-files-found: ignore
 
   ui-tests:
+    needs: lint
     name: UI tests
     runs-on: ubuntu-latest
     timeout-minutes: 30

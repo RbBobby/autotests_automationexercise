@@ -25,6 +25,7 @@ source .venv/bin/activate          # Windows: .venv\Scripts\Activate.ps1
 # 2. Зависимости
 pip install --upgrade pip
 pip install -r requirements.txt
+pip install -r requirements-dev.txt   # Ruff + pre-commit (опционально)
 
 # 3. API-тесты (рекомендуется начать с них — без Chrome)
 pytest -m api -v
@@ -140,6 +141,28 @@ cp .env.example .env
 
 ---
 
+## Линтер (Ruff)
+
+```bash
+pip install -r requirements-dev.txt
+ruff check .              # проверка
+ruff check . --fix        # автоисправление
+ruff format .             # форматирование
+ruff format --check .     # только проверка формата (как в CI)
+```
+
+### Pre-commit (перед каждым коммитом)
+
+```bash
+pip install pre-commit
+pre-commit install
+pre-commit run --all-files   # первый прогон по всему проекту
+```
+
+В CI job **Lint (Ruff)** запускается перед `api-tests` и `ui-tests`.
+
+---
+
 ## Запуск тестов
 
 ### API
@@ -247,12 +270,15 @@ sudo mv /usr/local/bin/chromedriver /usr/local/bin/chromedriver.bak
 
 ## CI (GitHub Actions)
 
-В репозитории есть workflow [`.github/workflows/tests.yml`](.github/workflows/tests.yml) с двумя job:
+В репозитории есть workflow [`.github/workflows/tests.yml`](.github/workflows/tests.yml):
 
 | Job | Команда | Нужен Chrome |
 |-----|---------|--------------|
+| `lint` | `ruff check` + `ruff format --check` | нет |
 | `api-tests` | `pytest -m api` | нет |
 | `ui-tests` | `pytest -m ui --headless` | да (ставится автоматически) |
+
+`api-tests` и `ui-tests` запускаются только после успешного `lint`.
 
 ### Badge в README
 

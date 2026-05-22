@@ -20,7 +20,6 @@ Test coverage:
 """
 
 import pytest
-
 from ui.pages.products_page import ProductsPage
 
 pytestmark = pytest.mark.ui
@@ -119,9 +118,9 @@ class TestSearch:
         results = products_page.get_search_results()
         assert len(results) > 0, f"Search for '{query}' returned no results"
         # Site may return a broad set; require at least one name matching the query.
-        assert any(query.lower() in name.lower() for name in results), (
-            f"None of {results!r} contain the search query '{query}'"
-        )
+        assert any(
+            query.lower() in name.lower() for name in results
+        ), f"None of {results!r} contain the search query '{query}'"
 
     def test_search_input_updates_product_list(self, products_page):
         original_count = products_page.get_product_count()
@@ -133,26 +132,24 @@ class TestSearch:
     def test_search_with_no_match_shows_empty_list(self, products_page):
         products_page.search_for_product("xyznonexistentproduct123")
         results = products_page.get_search_results()
-        assert len(results) == 0, (
-            "Expected 0 results for a nonsense search query but got some"
-        )
+        assert len(results) == 0, "Expected 0 results for a nonsense search query but got some"
 
 
 # ── TC-10 / TC-11 ─────────────────────────────────────────────────────────────
 class TestAddToCart:
     def test_add_to_cart_opens_modal(self, products_page):
         products_page.hover_and_add_to_cart(index=0)
-        assert products_page.is_element_visible(ProductsPage.CART_MODAL), (
-            "Cart modal did not appear after clicking 'Add to Cart'"
-        )
+        assert products_page.is_element_visible(
+            ProductsPage.CART_MODAL
+        ), "Cart modal did not appear after clicking 'Add to Cart'"
 
     def test_cart_modal_can_be_dismissed(self, products_page):
         products_page.hover_and_add_to_cart(index=0)
         products_page.dismiss_cart_modal()
         # After dismissal the modal should no longer be visible
-        assert not products_page.is_element_visible(ProductsPage.CART_MODAL), (
-            "Cart modal is still visible after clicking 'Continue Shopping'"
-        )
+        assert not products_page.is_element_visible(
+            ProductsPage.CART_MODAL
+        ), "Cart modal is still visible after clicking 'Continue Shopping'"
 
 
 # ── TC-12 / TC-13 ─────────────────────────────────────────────────────────────
@@ -194,9 +191,9 @@ class TestNavigation:
     def test_view_product_navigates_to_details(self, products_page):
         products_page.click_view_product(index=0)
         current_url = products_page.get_current_url()
-        assert "product_details" in current_url, (
-            f"Expected URL to contain 'product_details', got: {current_url}"
-        )
+        assert (
+            "product_details" in current_url
+        ), f"Expected URL to contain 'product_details', got: {current_url}"
 
     def test_navbar_home_link_visible(self, products_page):
         assert products_page.is_element_visible(ProductsPage.NAV_HOME)

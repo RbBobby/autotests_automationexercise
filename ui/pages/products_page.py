@@ -65,11 +65,11 @@ class ProductsPage(BasePage):
 
     # ── Left sidebar ──────────────────────────────────────────────────────────
     LEFT_SIDEBAR = (By.CSS_SELECTOR, "div.left-sidebar")
-    CATEGORY_SECTION = (By.CSS_SELECTOR, "div.left-sidebar h2")      # "CATEGORY" heading
+    CATEGORY_SECTION = (By.CSS_SELECTOR, "div.left-sidebar h2")  # "CATEGORY" heading
     CATEGORY_WOMEN = (By.CSS_SELECTOR, "a[href='#Women']")
     CATEGORY_MEN = (By.CSS_SELECTOR, "a[href='#Men']")
     CATEGORY_KIDS = (By.CSS_SELECTOR, "a[href='#Kids']")
-    BRANDS_SECTION = (By.CSS_SELECTOR, "div.brands_products h2")     # "BRANDS" heading
+    BRANDS_SECTION = (By.CSS_SELECTOR, "div.brands_products h2")  # "BRANDS" heading
     BRAND_LINKS = (By.CSS_SELECTOR, "div.brands-name ul li a")
 
     # ── Footer / Subscription ─────────────────────────────────────────────────
@@ -117,17 +117,13 @@ class ProductsPage(BasePage):
         Uses JS click, then falls back to direct navigation if an ad overlay
         (e.g. #google_vignette in CI) blocks the click.
         """
-        links = self.wait.until(
-            EC.presence_of_all_elements_located(self.VIEW_PRODUCT_LINKS)
-        )
+        links = self.wait.until(EC.presence_of_all_elements_located(self.VIEW_PRODUCT_LINKS))
         link = links[index]
         href = link.get_attribute("href")
         if not href or "product_details" not in href:
             raise ValueError(f"View Product link has unexpected href: {href!r}")
 
-        self.driver.execute_script(
-            "arguments[0].scrollIntoView({block: 'center'});", link
-        )
+        self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", link)
         self.driver.execute_script("arguments[0].click();", link)
 
         try:

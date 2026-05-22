@@ -55,9 +55,7 @@ def valid_user_payload() -> dict:
 @pytest.fixture(scope="session")
 def existing_user(settings: Settings) -> dict:
     if not settings.test_user_email or not settings.test_user_password:
-        pytest.skip(
-            "TEST_USER_EMAIL and TEST_USER_PASSWORD must be set in .env for login tests"
-        )
+        pytest.skip("TEST_USER_EMAIL and TEST_USER_PASSWORD must be set in .env for login tests")
     return {
         "email": settings.test_user_email,
         "password": settings.test_user_password,
@@ -68,9 +66,7 @@ def existing_user(settings: Settings) -> dict:
 def registered_user(user_service: UserService, valid_user_payload: dict) -> dict:
     create_response = user_service.create_account(valid_user_payload)
     body = create_response.json
-    assert body["responseCode"] == 201, (
-        f"User creation failed: {body.get('message', body)}"
-    )
+    assert body["responseCode"] == 201, f"User creation failed: {body.get('message', body)}"
     yield valid_user_payload
     delete_response = user_service.delete_account(
         email=valid_user_payload["email"],

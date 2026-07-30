@@ -19,16 +19,15 @@ class TestGetAllProductsList:
 
         # Assert
         assert response.status_code == 200
-        body = response.json
-        assert body["responseCode"] == 200
-        products = body["products"]
-        assert len(products) > 0
-        first = products[0]
-        assert "id" in first
-        assert "name" in first
-        assert "price" in first
-        assert "brand" in first
-        assert "category" in first
+        body = response.body
+        assert body.response_code == 200
+        assert len(body.products) > 0
+        first = body.products[0]
+        assert first.id
+        assert first.name
+        assert first.price
+        assert first.brand
+        assert first.category
 
 
 class TestPostToAllProductsList:
@@ -40,6 +39,6 @@ class TestPostToAllProductsList:
 
         # Assert
         assert response.status_code == 200
-        body = response.json
-        assert body["responseCode"] == 405
-        assert body["message"] == "This request method is not supported."
+        body = response.body
+        assert body.response_code == 405
+        assert body.message == "This request method is not supported."

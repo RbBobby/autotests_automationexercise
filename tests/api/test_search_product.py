@@ -22,9 +22,9 @@ class TestSearchProduct:
 
         # Assert
         assert response.status_code == 200
-        body = response.json
-        assert body["responseCode"] == 200
-        assert len(body["products"]) > 0
+        body = response.body
+        assert body.response_code == 200
+        assert len(body.products) > 0
 
 
 class TestSearchProductMissingParam:
@@ -36,8 +36,8 @@ class TestSearchProductMissingParam:
 
         # Assert
         assert response.status_code == 200
-        body = response.json
-        assert body["responseCode"] == 400
-        assert body["message"] == (
+        body = response.body
+        assert body.response_code == 400
+        assert body.message == (
             "Bad request, search_product parameter is missing in POST request."
         )

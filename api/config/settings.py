@@ -1,3 +1,10 @@
+"""
+Environment-based configuration for API tests.
+
+Values come from .env (via python-dotenv) or OS environment variables.
+Copy .env.example → .env and set TEST_USER_* for login tests (API 7–8).
+"""
+
 import os
 from dataclasses import dataclass
 
@@ -11,6 +18,8 @@ DEFAULT_API_TIMEOUT = 30
 
 @dataclass(frozen=True)
 class Settings:
+    """Immutable runtime settings for the API test suite."""
+
     api_base_url: str
     api_timeout: int
     test_user_email: str
@@ -18,6 +27,7 @@ class Settings:
 
 
 def get_settings() -> Settings:
+    """Build Settings from environment; empty credentials → login tests skipped."""
     return Settings(
         api_base_url=os.getenv("API_BASE_URL", DEFAULT_API_BASE_URL).rstrip("/"),
         api_timeout=int(os.getenv("API_TIMEOUT", DEFAULT_API_TIMEOUT)),

@@ -31,7 +31,7 @@ pip install -r requirements-dev.txt   # Ruff + pre-commit (опциональн�
 pytest -m api -v
 
 # 4. UI smoke (один тест)
-pytest tests/test_products_page.py::TestPageLoad::test_page_title -v --headless
+pytest tests/ui/test_products_page.py::TestPageLoad::test_page_title -v --headless
 
 # 5. Все UI-тесты
 pytest -m ui -v --headless
@@ -84,16 +84,21 @@ pytest -m api -v
 ```text
 autotests_automationexercise/
 ├── api/
-│   ├── client/api_client.py       # HTTP transport
-│   ├── config/settings.py         # .env → BASE_URL, credentials
-│   ├── models/user_factory.py
-│   └── services/                    # Products, Brands, Search, Auth, User
+│   ├── client/
+│   │   └── api_client.py          # ApiClient, ApiResponse (+ typed .body)
+│   ├── config/
+│   │   └── settings.py            # Settings dataclass, .env
+│   ├── models/
+│   │   ├── user.py                # UserPayload (request)
+│   │   ├── credentials.py         # UserCredentials
+│   │   ├── responses.py           # ApiBody, Product, Brand, UserDetail
+│   │   └── user_factory.py        # Faker-based test data
+│   └── services/                  # Products, Brands, Search, Auth, User
 ├── tests/
-│   ├── api/                       # @pytest.mark.api
-│   └── test_products_page.py      # @pytest.mark.ui
-├── ui/pages/                      # base_page, products_page
-├── conftest.py                    # UI: driver, --headless
-├── tests/api/conftest.py          # API: api_client, services, registered_user
+│   ├── api/                       # @pytest.mark.api + conftest fixtures
+│   └── ui/                        # @pytest.mark.ui + browser fixtures
+├── ui/pages/                      # Page Object Model (base_page, products_page)
+├── conftest.py                    # --headless, UI failure screenshots
 ├── pytest.ini
 ├── .env.example
 └── requirements.txt
@@ -108,19 +113,20 @@ autotests_automationexercise/
 ```text
 test  →  products_service.get_products()  →  ApiClient  →  automationexercise.com/api
          ↑ fixture (DI)
+         ↑ response.body (ApiBody dataclass)
 ```
 
-- **Arrange** — fixtures (`registered_user`, `valid_user_payload`)
+- **Arrange** — fixtures (`registered_user`, `valid_user_payload`, `existing_user`)
 - **Act** — один вызов метода Service
-- **Assert** — `response.json["responseCode"]`, `message`, структура JSON
+- **Assert** — `response.body.response_code`, `message`, typed `products` / `brands` / `user`
 
 > Сайт часто отвечает **HTTP 200** при ошибке; смотрите `responseCode` в теле JSON.
 
 ### UI: Page Object Model
 
 - `ui/pages/products_page.py` — локаторы и действия
-- `tests/test_products_page.py` — сценарии
-- `conftest.py` — `driver`, опция `--headless`
+- `tests/ui/test_products_page.py` — сценарии
+- `tests/ui/conftest.py` — `driver`, опция `--headless` (корневой `conftest.py` — CLI и скриншоты)
 
 ---
 
@@ -176,7 +182,7 @@ pytest tests/api/test_products_list.py -v
 
 ```bash
 pytest -m ui -v --headless
-pytest tests/test_products_page.py::TestPageLoad::test_page_title -v --headless
+pytest tests/ui/test_products_page.py::TestPageLoad::test_page_title -v --headless
 ```
 
 ### Всё сразу

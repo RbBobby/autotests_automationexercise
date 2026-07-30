@@ -1,98 +1,72 @@
 """
-API 11: POST To Create/Register User Account
-API 12: DELETE METHOD To Delete User Account
-API 13: PUT METHOD To Update User Account
-API 14: GET user account detail by email
+API 11–14: user account lifecycle — create, update, get, delete.
+
+registered_user fixture creates/deletes account automatically.
+create/delete tests manage their own data to avoid fixture coupling.
 """
 
 import pytest
 
+from api.models.user import UserPayload
 from api.services.user_service import UserService
 
 pytestmark = pytest.mark.api
 
 
 class TestCreateUserAccount:
-    """API 11 — POST /api/createAccount"""
+    """API 11 — POST /createAccount."""
 
     def test_create_user_account_returns_201(
-        self, user_service: UserService, valid_user_payload: dict
+        self, user_service: UserService, valid_user_payload: UserPayload
     ):
-        # Act
         response = user_service.create_account(valid_user_payload)
-
-        # Assert
         assert response.status_code == 200
-        body = response.json
-        assert body["responseCode"] == 201
-        assert body["message"] == "User created!"
-
-        # Teardown
-        user_service.delete_account(
-            email=valid_user_payload["email"],
-            password=valid_user_payload["password"],
-        )
+        body = response.body
+        assert body.response_code == 201
+        assert body.message == "User created!"
+        user_service.delete_account(valid_user_payload.as_credentials())
 
 
 class TestUpdateUserAccount:
-    """API 13 — PUT /api/updateAccount"""
+    """API 13 — PUT /updateAccount."""
 
     def test_update_user_account_returns_200(
-        self, user_service: UserService, registered_user: dict
+        self, user_service: UserService, registered_user: UserPayload
     ):
-        # Arrange
-        registered_user["firstname"] = "UpdatedFirst"
-        registered_user["lastname"] = "UpdatedLast"
-
-        # Act
+        registered_user.firstname = "UpdatedFirst"
+        registered_user.lastname = "UpdatedLast"
         response = user_service.update_account(registered_user)
-
-        # Assert
         assert response.status_code == 200
-        body = response.json
-        assert body["responseCode"] == 200
-        assert body["message"] == "User updated!"
+        body = response.body
+        assert body.response_code == 200
+        assert body.message == "User updated!"
 
 
 class TestGetUserDetailByEmail:
-    """API 14 — GET /api/getUserDetailByEmail"""
+    """API 14 — GET /getUserDetailByEmail."""
 
     def test_get_user_detail_by_email_returns_200(
-        self, user_service: UserService, registered_user: dict
+        self, user_service: UserService, registered_user: UserPayload
     ):
-        # Arrange
-        email = registered_user["email"]
-
-        # Act
-        response = user_service.get_user_by_email(email)
-
-        # Assert
+        response = user_service.get_user_by_email(registered_user.email)
         assert response.status_code == 200
-        body = response.json
-        assert body["responseCode"] == 200
-        user = body["user"]
-        assert user["email"] == email
-        assert user["name"] == registered_user["name"]
+        body = response.body
+        assert body.response_code == 200
+        assert body.user is not None
+        assert body.user.email == registered_user.email
+        assert body.user.name == registered_user.name
 
 
 class TestDeleteUserAccount:
-    """API 12 — DELETE /api/deleteAccount"""
+    """API 12 — DELETE /deleteAccount."""
 
     def test_delete_user_account_returns_200(
-        self, user_service: UserService, valid_user_payload: dict
+        self, user_service: UserService, valid_user_payload: UserPayload
     ):
-        # Arrange
         create_response = user_service.create_account(valid_user_payload)
-        assert create_response.json["responseCode"] == 201
-
-        # Act
-        response = user_service.delete_account(
-            email=valid_user_payload["email"],
-            password=valid_user_payload["password"],
-        )
-
-        # Assert
+        assert create_response.body.response_code == 201
+        response = user_service.delete_account(valid_user_payload.as_credentials())
         assert response.status_code == 200
-        body = response.json
-        assert body["responseCode"] == 200
-        assert body["message"] == "Account deleted!"
+        body = response.body
+        assert body.response_code == 200
+        assert body.message == "Account deleted!"

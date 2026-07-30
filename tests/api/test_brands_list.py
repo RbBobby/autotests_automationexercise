@@ -1,60 +1,41 @@
 """
-API 3: GET All Brands List
-API 4: PUT To All Brands List (unsupported method)
+API 3–4: GET /brandsList and unsupported PUT.
+
+Brand names are asserted against EXPECTED_API_BRANDS from constants.
 """
 
 import pytest
 
 from api.services.brands_service import BrandsService
+from tests.api.constants import EXPECTED_API_BRANDS
 
 pytestmark = pytest.mark.api
 
-EXPECTED_BRANDS = [
-    "Polo",
-    "H&M",
-    "Madame",
-    "Mast & Harbour",
-    "Babyhug",
-    "Allen Solly Junior",
-    "Kookie Kids",
-    "Biba",
-]
-
 
 class TestGetAllBrandsList:
-    """API 3 — GET /api/brandsList"""
+    """API 3 — GET /brandsList."""
 
     def test_get_all_brands_returns_200(self, brands_service: BrandsService):
-        # Act
         response = brands_service.get_brands()
-
-        # Assert
         assert response.status_code == 200
-        body = response.json
-        assert body["responseCode"] == 200
-        brands = body["brands"]
-        assert len(brands) > 0
-        assert "brand" in brands[0]
+        body = response.body
+        assert body.response_code == 200
+        assert len(body.brands) > 0
+        assert body.brands[0].brand
 
-    @pytest.mark.parametrize("expected_brand", EXPECTED_BRANDS)
+    @pytest.mark.parametrize("expected_brand", EXPECTED_API_BRANDS)
     def test_expected_brands_present(self, brands_service: BrandsService, expected_brand: str):
-        # Act
         response = brands_service.get_brands()
-
-        # Assert
-        brand_names = [b["brand"] for b in response.json["brands"]]
+        brand_names = [item.brand for item in response.body.brands]
         assert expected_brand in brand_names
 
 
 class TestPutToAllBrandsList:
-    """API 4 — PUT /api/brandsList"""
+    """API 4 — PUT /brandsList (method not allowed)."""
 
     def test_put_brands_returns_405(self, brands_service: BrandsService):
-        # Act
         response = brands_service.put_brands()
-
-        # Assert
         assert response.status_code == 200
-        body = response.json
-        assert body["responseCode"] == 405
-        assert body["message"] == "This request method is not supported."
+        body = response.body
+        assert body.response_code == 405
+        assert body.message == "This request method is not supported."

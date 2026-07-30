@@ -1,9 +1,17 @@
+"""
+Base Page Object — shared Selenium helpers for all UI pages.
+
+Provides explicit waits (WebDriverWait) instead of hard sleeps, except for
+open() retries on transient network errors against the live site.
+"""
+
 import time
 
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+# Substrings in WebDriverException message that indicate a retry-worthy failure.
 _TRANSIENT_NAV_ERRORS = (
     "err_connection",
     "err_internet",
@@ -14,14 +22,14 @@ _TRANSIENT_NAV_ERRORS = (
 
 
 class BasePage:
-    """Base class for all page objects. Contains common browser interactions."""
+    """Parent class for page objects; holds driver and default 10s wait."""
 
-    def __init__(self, driver):
+    def __init__(self, driver) -> None:
         self.driver = driver
         self.wait = WebDriverWait(driver, 10)
 
-    def open(self, url: str, retries: int = 3):
-        """Navigate to URL; retry on transient network errors (live site flakiness)."""
+    def open(self, url: str, retries: int = 3) -> None:
+        """Navigate to url; retry on transient network errors (live site flakiness)."""
         last_error = None
         for attempt in range(retries):
             try:
@@ -44,7 +52,7 @@ class BasePage:
     def get_current_url(self) -> str:
         return self.driver.current_url
 
-    def wait_for_url_contains(self, fragment: str, timeout: int = 10):
+    def wait_for_url_contains(self, fragment: str, timeout: int = 10) -> None:
         WebDriverWait(self.driver, timeout).until(lambda d: fragment in d.current_url)
 
     def wait_for_element_visible(self, locator: tuple):
@@ -62,10 +70,10 @@ class BasePage:
     def find_elements(self, locator: tuple):
         return self.driver.find_elements(*locator)
 
-    def click(self, locator: tuple):
+    def click(self, locator: tuple) -> None:
         self.wait_for_element_clickable(locator).click()
 
-    def type_text(self, locator: tuple, text: str):
+    def type_text(self, locator: tuple, text: str) -> None:
         element = self.wait_for_element_visible(locator)
         element.clear()
         element.send_keys(text)

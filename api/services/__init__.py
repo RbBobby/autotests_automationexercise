@@ -1,3 +1,5 @@
+"""Service Object layer — one class per API resource group."""
+
 from api.services.auth_service import AuthService
 from api.services.brands_service import BrandsService
 from api.services.products_service import ProductsService

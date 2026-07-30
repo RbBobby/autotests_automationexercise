@@ -1,0 +1,70 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "pytest API: все тесты (-m api)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["-m", "api", "-v", "-s", "tests/api"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "env": {
+        "PYDEVD_DISABLE_FILE_VALIDATION": "1"
+      }
+    },
+    {
+      "name": "pytest API: текущий файл",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["${file}", "-v", "-s"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "env": {
+        "PYDEVD_DISABLE_FILE_VALIDATION": "1"
+      }
+    },
+    {
+      "name": "pytest UI: все тесты (-m ui --headless)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["-m", "ui", "-v", "-s", "--headless", "tests/ui"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "env": {
+        "PYDEVD_DISABLE_FILE_VALIDATION": "1"
+      }
+    },
+    {
+      "name": "pytest UI: текущий файл (--headless)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["${file}", "-v", "-s", "--headless"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "env": {
+        "PYDEVD_DISABLE_FILE_VALIDATION": "1"
+      }
+    },
+    {
+      "name": "pytest UI: с видимым браузером",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["-m", "ui", "-v", "-s", "tests/ui"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "env": {
+        "PYDEVD_DISABLE_FILE_VALIDATION": "1"
+      }
+    }
+  ]
+}

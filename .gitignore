@@ -26,8 +26,13 @@ coverage.xml
 # Selenium / webdriver logs
 *.log
 
-# VSCode settings
-.vscode/
+# VSCode / Cursor — commit launch.json + settings.json, ignore the rest
+.vscode/*
+!.vscode/launch.json
+!.vscode/settings.json
+
+# JetBrains IDE
+.idea/
 
 # MacOS
 .DS_Store
